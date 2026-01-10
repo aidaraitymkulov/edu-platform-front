@@ -1,0 +1,80 @@
+import {
+  createApi,
+  fetchBaseQuery,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from '@reduxjs/toolkit/query/react'
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: apiBaseUrl,
+  credentials: 'include',
+})
+
+let refreshPromise: Promise<boolean> | null = null
+
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions)
+  const requestUrl = typeof args === 'string' ? args : args.url
+  const shouldSkipRefresh =
+    requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh')
+
+  if (!shouldSkipRefresh && result.error && result.error.status === 401) {
+    if (!refreshPromise) {
+      refreshPromise = (async () => {
+        const refreshResult = await baseQuery(
+          { url: '/auth/refresh', method: 'POST' },
+          api,
+          extraOptions,
+        )
+        refreshPromise = null
+        return !refreshResult.error
+      })()
+    }
+
+    const refreshed = await refreshPromise
+    if (refreshed) {
+      result = await baseQuery(args, api, extraOptions)
+    }
+  }
+  return result
+}
+
+export type LoginPayload = {
+  login: string
+  password: string
+}
+
+export type AuthUser = {
+  id?: string | number
+  login?: string
+  role?: string
+}
+
+export const api = createApi({
+  reducerPath: 'api',
+  baseQuery: baseQueryWithReauth,
+  tagTypes: ['Me'],
+  endpoints: (builder) => ({
+    login: builder.mutation<void, LoginPayload>({
+      query: (body) => ({
+        url: '/auth/login',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Me'],
+    }),
+    me: builder.query<AuthUser, void>({
+      query: () => '/auth/me',
+      providesTags: ['Me'],
+    }),
+  }),
+})
+
+export const { useLoginMutation, useMeQuery } = api
