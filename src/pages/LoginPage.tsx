@@ -4,14 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import {
-  Alert,
-  Box,
-  Button,
-  Container,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Alert, Box, Button, Container, TextField, Typography } from '@mui/material'
 import { useLoginMutation } from '../store/api'
 
 const schema = z.object({
@@ -85,8 +78,7 @@ function LoginPage() {
           mt: { xs: 6, sm: 10 },
           p: { xs: 3, sm: 4 },
           borderRadius: 3,
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92))',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.92))',
           boxShadow: '0 18px 40px rgba(20, 33, 61, 0.15)',
           border: '1px solid rgba(255,255,255,0.6)',
           backdropFilter: 'blur(6px)',
