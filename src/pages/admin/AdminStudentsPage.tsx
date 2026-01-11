@@ -23,6 +23,7 @@ import {
   useDeleteStudentMutation,
   useGroupStudentsQuery,
   useGroupsQuery,
+  useMeQuery,
 } from '../../store/api'
 
 type ApiError = FetchBaseQueryError | { status?: string; data?: unknown }
@@ -57,6 +58,8 @@ function getErrorMessage(error: unknown) {
 }
 
 function AdminStudentsPage() {
+  const { data: user } = useMeQuery()
+  const isAdmin = user?.role === 'admin'
   const { data: groups = [], isLoading: isGroupsLoading } = useGroupsQuery()
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const { data: students = [], isLoading: isStudentsLoading } = useGroupStudentsQuery(
@@ -112,6 +115,10 @@ function AdminStudentsPage() {
 
   const handleDelete = async (id: string | number) => {
     setError('')
+    if (!isAdmin) {
+      setError('Недостаточно прав для удаления студента.')
+      return
+    }
     try {
       await deleteStudent(id).unwrap()
     } catch (deleteError) {
@@ -199,6 +206,7 @@ function AdminStudentsPage() {
                             aria-label="Удалить"
                             color="error"
                             onClick={() => handleDelete(student.id)}
+                            disabled={!isAdmin}
                           >
                             <DeleteOutlineIcon />
                           </IconButton>

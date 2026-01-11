@@ -26,6 +26,25 @@ function HomePage() {
               <Button component={RouterLink} to="/admin/groups" variant="contained">
                 Группы
               </Button>
+              <Button component={RouterLink} to="/teacher/dashboard" variant="contained">
+                Кабинет преподавателя
+              </Button>
+            </>
+          ) : null}
+          {user?.role === 'teacher' ? (
+            <>
+              <Button component={RouterLink} to="/teacher/dashboard" variant="contained">
+                Кабинет преподавателя
+              </Button>
+              <Button component={RouterLink} to="/admin/teachers" variant="contained">
+                Учителя
+              </Button>
+              <Button component={RouterLink} to="/admin/students" variant="contained">
+                Студенты
+              </Button>
+              <Button component={RouterLink} to="/admin/groups" variant="contained">
+                Группы
+              </Button>
             </>
           ) : null}
           <Button component={RouterLink} to="/login" variant="outlined">

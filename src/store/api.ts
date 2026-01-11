@@ -103,10 +103,100 @@ export type Group = {
   curatorId?: string | number | null
 }
 
+export type TestInput = {
+  title: string
+  description?: string
+  availableFrom: string
+  availableTo: string
+  durationMinutes: number
+}
+
+export type Test = {
+  id: string | number
+  title?: string
+  description?: string
+  availableFrom?: string
+  availableTo?: string
+  durationMinutes?: number
+}
+
+export type QuestionOptionInput = {
+  text: string
+  isCorrect: boolean
+}
+
+export type QuestionInput = {
+  text: string
+  type: 'single' | 'multiple'
+  options: QuestionOptionInput[]
+}
+
+export type TestResult = {
+  id: string | number
+  userId?: string | number
+  login?: string
+  startedAt?: string
+  submittedAt?: string
+  score?: number
+  isPassed?: boolean
+}
+
+export type AttemptOption = {
+  id: string | number
+  text?: string
+  isCorrect?: boolean
+  isSelected?: boolean
+}
+
+export type AttemptQuestion = {
+  id: string | number
+  text?: string
+  type?: string
+  isCorrect?: boolean
+  options?: AttemptOption[]
+}
+
+export type AttemptDetails = {
+  attemptId: string | number
+  studentId?: string | number
+  studentLogin?: string
+  testId?: string | number
+  testTitle?: string
+  score?: number
+  isPassed?: boolean
+  questions?: AttemptQuestion[]
+}
+
+export type GradeInput = {
+  studentId: string | number
+  value: number
+  comment?: string
+}
+
+export type Grade = {
+  id?: string | number
+  studentId?: string | number
+  teacherId?: string | number
+  value?: number
+  comment?: string
+  createdAt?: string
+}
+
+export type TopicInput = {
+  title: string
+  content: string
+}
+
+export type Topic = {
+  id: string | number
+  title?: string
+  content?: string
+}
+
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Me', 'Teachers', 'Groups'],
+  tagTypes: ['Me', 'Teachers', 'Groups', 'Tests', 'Topics', 'Grades'],
   endpoints: (builder) => ({
     login: builder.mutation<void, LoginPayload>({
       query: (body) => ({
@@ -167,6 +257,69 @@ export const api = createApi({
       }),
       invalidatesTags: ['Groups'],
     }),
+    createTest: builder.mutation<Test, TestInput>({
+      query: (body) => ({
+        url: '/tests',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Tests'],
+    }),
+    tests: builder.query<Test[], void>({
+      query: () => '/tests',
+      providesTags: ['Tests'],
+    }),
+    deleteTest: builder.mutation<void, string | number>({
+      query: (id) => ({
+        url: `/tests/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Tests'],
+    }),
+    addTestQuestion: builder.mutation<void, { testId: string | number; data: QuestionInput }>({
+      query: ({ testId, data }) => ({
+        url: `/tests/${testId}/questions`,
+        method: 'POST',
+        body: data,
+      }),
+    }),
+    testResults: builder.query<TestResult[], string | number>({
+      query: (testId) => `/tests/${testId}/results`,
+    }),
+    attemptDetails: builder.query<AttemptDetails, string | number>({
+      query: (attemptId) => `/attempts/${attemptId}/details`,
+    }),
+    topics: builder.query<Topic[], void>({
+      query: () => '/topics',
+      providesTags: ['Topics'],
+    }),
+    createTopic: builder.mutation<void, TopicInput>({
+      query: (body) => ({
+        url: '/topics',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Topics'],
+    }),
+    deleteTopic: builder.mutation<void, string | number>({
+      query: (id) => ({
+        url: `/topics/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Topics'],
+    }),
+    createGrade: builder.mutation<Grade, GradeInput>({
+      query: (body) => ({
+        url: '/grades',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Grades'],
+    }),
+    gradesByGroup: builder.query<Grade[], string | number>({
+      query: (groupId) => `/grades/groups/${groupId}`,
+      providesTags: ['Grades'],
+    }),
   }),
 })
 
@@ -181,4 +334,15 @@ export const {
   useGroupsQuery,
   useCreateGroupMutation,
   useGroupStudentsQuery,
+  useCreateTestMutation,
+  useTestsQuery,
+  useDeleteTestMutation,
+  useAddTestQuestionMutation,
+  useTestResultsQuery,
+  useAttemptDetailsQuery,
+  useTopicsQuery,
+  useCreateTopicMutation,
+  useDeleteTopicMutation,
+  useCreateGradeMutation,
+  useGradesByGroupQuery,
 } = api

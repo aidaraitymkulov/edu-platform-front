@@ -17,6 +17,7 @@ import { Link as RouterLink } from 'react-router-dom'
 import {
   useCreateTeacherMutation,
   useDeleteTeacherMutation,
+  useMeQuery,
   useTeachersQuery,
 } from '../../store/api'
 
@@ -52,6 +53,8 @@ function getErrorMessage(error: unknown) {
 }
 
 function AdminTeachersPage() {
+  const { data: user } = useMeQuery()
+  const isAdmin = user?.role === 'admin'
   const { data: teachers = [], isLoading } = useTeachersQuery()
   const [createTeacher] = useCreateTeacherMutation()
   const [deleteTeacher] = useDeleteTeacherMutation()
@@ -66,6 +69,10 @@ function AdminTeachersPage() {
 
   const handleCreate = async () => {
     setError('')
+    if (!isAdmin) {
+      setError('Недостаточно прав для создания учителя.')
+      return
+    }
     if (
       !form.login.trim() ||
       !form.password.trim() ||
@@ -98,6 +105,10 @@ function AdminTeachersPage() {
 
   const handleDelete = async (id: string | number) => {
     setError('')
+    if (!isAdmin) {
+      setError('Недостаточно прав для удаления учителя.')
+      return
+    }
     try {
       await deleteTeacher(id).unwrap()
     } catch (deleteError) {
@@ -119,59 +130,63 @@ function AdminTeachersPage() {
         </Button>
 
         <Stack spacing={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Создать учителя
-              </Typography>
-              {error ? (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              ) : null}
-              <Stack spacing={2}>
-                <TextField
-                  label="Логин"
-                  value={form.login}
-                  onChange={(event) => setForm((prev) => ({ ...prev, login: event.target.value }))}
-                />
-                <TextField
-                  label="Пароль"
-                  type="password"
-                  value={form.password}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, password: event.target.value }))
-                  }
-                />
-                <TextField
-                  label="Имя"
-                  value={form.firstName}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, firstName: event.target.value }))
-                  }
-                />
-                <TextField
-                  label="Фамилия"
-                  value={form.lastName}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, lastName: event.target.value }))
-                  }
-                />
-                <TextField
-                  label="Дата рождения"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  value={form.birthDate}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, birthDate: event.target.value }))
-                  }
-                />
-                <Button variant="contained" onClick={handleCreate}>
+          {isAdmin ? (
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2 }}>
                   Создать учителя
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
+                </Typography>
+                {error ? (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                  </Alert>
+                ) : null}
+                <Stack spacing={2}>
+                  <TextField
+                    label="Логин"
+                    value={form.login}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, login: event.target.value }))
+                    }
+                  />
+                  <TextField
+                    label="Пароль"
+                    type="password"
+                    value={form.password}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                  />
+                  <TextField
+                    label="Имя"
+                    value={form.firstName}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, firstName: event.target.value }))
+                    }
+                  />
+                  <TextField
+                    label="Фамилия"
+                    value={form.lastName}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, lastName: event.target.value }))
+                    }
+                  />
+                  <TextField
+                    label="Дата рождения"
+                    type="date"
+                    InputLabelProps={{ shrink: true }}
+                    value={form.birthDate}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, birthDate: event.target.value }))
+                    }
+                  />
+                  <Button variant="contained" onClick={handleCreate}>
+                    Создать учителя
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardContent>
@@ -217,6 +232,7 @@ function AdminTeachersPage() {
                         aria-label="Удалить"
                         color="error"
                         onClick={() => handleDelete(teacher.id)}
+                        disabled={!isAdmin}
                       >
                         <DeleteOutlineIcon />
                       </IconButton>
